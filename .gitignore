@@ -74,6 +74,9 @@ Cargo.lock
 *.tfstate
 *.tfstate.*
 
+# === Runtime data ===
+data/
+
 # === Logs & temp ===
 *.log
 **/tmp/
