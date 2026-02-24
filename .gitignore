@@ -89,3 +89,7 @@ Cargo.lock
 __pycache__/
 *.pyc
 .pytest_cache/
+# bd worktree
+.worktrees/compound-pc1/
+# bd worktree
+.worktrees/compound-nwj/
