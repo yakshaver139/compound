@@ -12,3 +12,9 @@ TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
 def home():
     html = (TEMPLATES_DIR / "transactions.html").read_text()
     return HTMLResponse(content=html)
+
+
+@router.get("/summary-page", response_class=HTMLResponse)
+def summary_page():
+    html = (TEMPLATES_DIR / "summary.html").read_text()
+    return HTMLResponse(content=html)

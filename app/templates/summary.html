@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compound - Summary</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; }
+    .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+    h1 { font-size: 1.5rem; margin-bottom: 24px; }
+    h2 { font-size: 1.1rem; margin-bottom: 12px; }
+    nav { margin-bottom: 24px; font-size: 0.9rem; }
+    nav a { color: #4a90d9; text-decoration: none; margin-right: 16px; }
+    nav a:hover { text-decoration: underline; }
+
+    .card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+    /* Totals */
+    .totals { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+    .stat { text-align: center; }
+    .stat-label { font-size: 0.85rem; color: #555; margin-bottom: 4px; }
+    .stat-value { font-size: 1.4rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .stat-value.income { color: #2e7d32; }
+    .stat-value.expense { color: #c62828; }
+    .stat-value.net-positive { color: #2e7d32; }
+    .stat-value.net-negative { color: #c62828; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 8px; border-bottom: 2px solid #e0e0e0; font-weight: 600; color: #555; }
+    td { padding: 8px; border-bottom: 1px solid #eee; }
+    tr:hover td { background: #fafafa; }
+    .amount { font-variant-numeric: tabular-nums; text-align: right; }
+    .empty { color: #999; padding: 24px; text-align: center; }
+    .category-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; background: #e8f0fe; color: #1a73e8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Summary</h1>
+    <nav><a href="/">Transactions</a></nav>
+
+    <div class="card">
+      <h2>Totals</h2>
+      <div id="totals" class="totals">
+        <div class="stat">
+          <div class="stat-label">Income</div>
+          <div class="stat-value income" id="total-income">--</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Expenses</div>
+          <div class="stat-value expense" id="total-expense">--</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Net</div>
+          <div class="stat-value" id="total-net">--</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Spending by Category</h2>
+      <div id="category-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const totalIncome = document.getElementById("total-income");
+    const totalExpense = document.getElementById("total-expense");
+    const totalNet = document.getElementById("total-net");
+    const categoryList = document.getElementById("category-list");
+
+    function fmt(n) {
+      return "$" + Math.abs(n).toFixed(2);
+    }
+
+    async function loadSummary() {
+      try {
+        const resp = await fetch("/summary");
+        if (!resp.ok) throw new Error("Failed to load summary");
+        const data = await resp.json();
+        renderTotals(data);
+        renderCategories(data.spend_by_category);
+      } catch (err) {
+        categoryList.innerHTML = '<div class="empty">Failed to load summary.</div>';
+      }
+    }
+
+    function renderTotals(data) {
+      totalIncome.textContent = fmt(data.total_income);
+      totalExpense.textContent = fmt(data.total_expense);
+      totalNet.textContent = (data.net < 0 ? "-" : "") + fmt(data.net);
+      totalNet.className = "stat-value " + (data.net >= 0 ? "net-positive" : "net-negative");
+    }
+
+    function renderCategories(byCategory) {
+      const entries = Object.entries(byCategory);
+      if (entries.length === 0) {
+        categoryList.innerHTML = '<div class="empty">No spending data yet.</div>';
+        return;
+      }
+      entries.sort((a, b) => b[1] - a[1]);
+      let html = `<table>
+        <thead><tr>
+          <th>Category</th><th class="amount">Amount</th>
+        </tr></thead><tbody>`;
+      for (const [cat, amount] of entries) {
+        html += `<tr>
+          <td><span class="category-badge">${cat}</span></td>
+          <td class="amount">$${Math.abs(amount).toFixed(2)}</td>
+        </tr>`;
+      }
+      html += "</tbody></table>";
+      categoryList.innerHTML = html;
+    }
+
+    loadSummary();
+  </script>
+</body>
+</html>
