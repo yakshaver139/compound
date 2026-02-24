@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compound - Transactions</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #333; }
+    .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+    h1 { font-size: 1.5rem; margin-bottom: 24px; }
+    h2 { font-size: 1.1rem; margin-bottom: 12px; }
+
+    /* Form */
+    .card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .form-group { display: flex; flex-direction: column; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 0.85rem; font-weight: 500; margin-bottom: 4px; color: #555; }
+    input, select, textarea { padding: 8px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #4a90d9; }
+    textarea { resize: vertical; min-height: 50px; }
+    button[type="submit"] { grid-column: 1 / -1; padding: 10px; background: #4a90d9; color: #fff; border: none; border-radius: 4px; font-size: 0.95rem; cursor: pointer; margin-top: 4px; }
+    button[type="submit"]:hover { background: #3a7bc8; }
+    button[type="submit"]:disabled { background: #aaa; cursor: not-allowed; }
+
+    /* Error */
+    .error { background: #fdecea; color: #b71c1c; padding: 10px; border-radius: 4px; margin-bottom: 12px; font-size: 0.85rem; display: none; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 8px; border-bottom: 2px solid #e0e0e0; font-weight: 600; color: #555; }
+    td { padding: 8px; border-bottom: 1px solid #eee; }
+    tr:hover td { background: #fafafa; }
+    .amount { font-variant-numeric: tabular-nums; }
+    .empty { color: #999; padding: 24px; text-align: center; }
+    .category-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; background: #e8f0fe; color: #1a73e8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Transactions</h1>
+
+    <div class="card">
+      <h2>Add Transaction</h2>
+      <div id="error" class="error"></div>
+      <form id="txn-form" class="form-grid">
+        <div class="form-group">
+          <label for="date">Date</label>
+          <input type="date" id="date" name="date" required>
+        </div>
+        <div class="form-group">
+          <label for="amount">Amount</label>
+          <input type="number" id="amount" name="amount" step="0.01" required placeholder="0.00">
+        </div>
+        <div class="form-group">
+          <label for="merchant">Merchant</label>
+          <input type="text" id="merchant" name="merchant" required placeholder="e.g. Whole Foods">
+        </div>
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category" name="category">
+            <option value="groceries">Groceries</option>
+            <option value="rent">Rent</option>
+            <option value="salary">Salary</option>
+            <option value="bills">Bills</option>
+            <option value="fun">Fun</option>
+            <option value="other" selected>Other</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label for="notes">Notes (optional)</label>
+          <textarea id="notes" name="notes" placeholder="Any additional details..."></textarea>
+        </div>
+        <button type="submit" id="submit-btn">Add Transaction</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Recent Transactions</h2>
+      <div id="txn-list"></div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("txn-form");
+    const errorEl = document.getElementById("error");
+    const txnList = document.getElementById("txn-list");
+    const submitBtn = document.getElementById("submit-btn");
+
+    // Default date to today
+    document.getElementById("date").valueAsDate = new Date();
+
+    async function loadTransactions() {
+      try {
+        const resp = await fetch("/transactions");
+        if (!resp.ok) throw new Error("Failed to load transactions");
+        const txns = await resp.json();
+        renderTransactions(txns);
+      } catch (err) {
+        txnList.innerHTML = '<div class="empty">Failed to load transactions.</div>';
+      }
+    }
+
+    function renderTransactions(txns) {
+      if (txns.length === 0) {
+        txnList.innerHTML = '<div class="empty">No transactions yet. Add one above!</div>';
+        return;
+      }
+      let html = `<table>
+        <thead><tr>
+          <th>Date</th><th>Merchant</th><th>Category</th><th>Amount</th><th>Notes</th>
+        </tr></thead><tbody>`;
+      for (const t of txns) {
+        const amt = parseFloat(t.amount).toFixed(2);
+        const notes = t.notes || "";
+        html += `<tr>
+          <td>${t.date}</td>
+          <td>${escapeHtml(t.merchant)}</td>
+          <td><span class="category-badge">${t.category}</span></td>
+          <td class="amount">$${amt}</td>
+          <td>${escapeHtml(notes)}</td>
+        </tr>`;
+      }
+      html += "</tbody></table>";
+      txnList.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement("div");
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorEl.style.display = "none";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Adding...";
+
+      const payload = {
+        date: form.date.value,
+        amount: parseFloat(form.amount.value),
+        merchant: form.merchant.value.trim(),
+        category: form.category.value,
+      };
+      const notes = form.notes.value.trim();
+      if (notes) payload.notes = notes;
+
+      try {
+        const resp = await fetch("/transactions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!resp.ok) {
+          const data = await resp.json();
+          throw new Error(data.detail || "Failed to add transaction");
+        }
+        // Reset form, keep date
+        form.amount.value = "";
+        form.merchant.value = "";
+        form.category.value = "other";
+        form.notes.value = "";
+        await loadTransactions();
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Add Transaction";
+      }
+    });
+
+    loadTransactions();
+  </script>
+</body>
+</html>
