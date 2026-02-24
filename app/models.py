@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import date
 from enum import Enum
 from typing import Optional
@@ -36,3 +37,36 @@ class GoalCreate(BaseModel):
 
 class Goal(GoalCreate):
     id: UUID = Field(default_factory=uuid4)
+
+
+class Summary(BaseModel):
+    total_income: float
+    total_expense: float
+    net: float
+    spend_by_category: dict[str, float]
+    monthly_net: dict[str, float]
+
+
+def compute_summary(transactions: list[Transaction]) -> Summary:
+    """Pure function: compute summary statistics from a list of transactions."""
+    total_income = 0.0
+    total_expense = 0.0
+    spend_by_cat: dict[str, float] = defaultdict(float)
+    monthly: dict[str, float] = defaultdict(float)
+
+    for tx in transactions:
+        amt = tx.amount
+        if amt > 0:
+            total_income += amt
+        else:
+            total_expense += abs(amt)
+            spend_by_cat[tx.category.value] += abs(amt)
+        monthly[tx.date.strftime("%Y-%m")] += amt
+
+    return Summary(
+        total_income=round(total_income, 2),
+        total_expense=round(total_expense, 2),
+        net=round(total_income - total_expense, 2),
+        spend_by_category=dict(spend_by_cat),
+        monthly_net=dict(monthly),
+    )
