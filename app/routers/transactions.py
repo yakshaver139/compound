@@ -6,8 +6,10 @@ from fastapi import APIRouter, Query
 from app.models import Category, Transaction
 from app.storage import load_data
 
-router = APIRouter(prefix="/transactions", tags=["transactions"])
+from app.models import Transaction, TransactionCreate
+from app.storage import append_transaction
 
+router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 @router.get("", response_model=list[Transaction])
 def list_transactions(
@@ -27,3 +29,9 @@ def list_transactions(
 
     txns.sort(key=lambda t: t["date"], reverse=True)
     return txns
+
+@router.post("", status_code=201)
+def create_transaction(body: TransactionCreate) -> Transaction:
+    tx = Transaction(**body.model_dump())
+    append_transaction(tx)
+    return tx

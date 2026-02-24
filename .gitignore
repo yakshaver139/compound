@@ -96,3 +96,7 @@ __pycache__/
 .worktrees/compound-pc1/
 # bd worktree
 .worktrees/compound-nwj/
+# bd worktree
+.worktrees/compound-3eh/
+# bd worktree
+.worktrees/compound-3be/
