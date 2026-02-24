@@ -4,7 +4,15 @@ from uuid import UUID
 import pytest
 from pydantic import ValidationError
 
-from app.models import Category, Goal, GoalCreate, Transaction, TransactionCreate
+from app.models import (
+    Category,
+    Goal,
+    GoalCreate,
+    GoalProjection,
+    Transaction,
+    TransactionCreate,
+    compute_projection,
+)
 
 
 class TestTransaction:
@@ -110,3 +118,61 @@ class TestGoal:
             start_date=date(2025, 1, 1),
         )
         assert not hasattr(gc, "id") or "id" not in gc.model_fields
+
+
+class TestComputeProjection:
+    def test_exact_division(self):
+        g = Goal(
+            name="Fund",
+            target_amount=10000.0,
+            monthly_contribution=500.0,
+            start_date=date(2025, 1, 1),
+        )
+        proj = compute_projection(g)
+        assert proj.months_to_target == 20
+        assert proj.target_date == date(2026, 9, 1)
+
+    def test_rounds_up(self):
+        g = Goal(
+            name="Fund",
+            target_amount=1000.0,
+            monthly_contribution=300.0,
+            start_date=date(2025, 6, 1),
+        )
+        proj = compute_projection(g)
+        # 1000/300 = 3.33 -> ceil = 4
+        assert proj.months_to_target == 4
+        assert proj.target_date == date(2025, 10, 1)
+
+    def test_zero_contribution(self):
+        g = Goal(
+            name="Fund",
+            target_amount=5000.0,
+            monthly_contribution=0.0,
+            start_date=date(2025, 1, 1),
+        )
+        proj = compute_projection(g)
+        assert proj.months_to_target == 0
+        assert proj.target_date == date(2025, 1, 1)
+
+    def test_negative_contribution(self):
+        g = Goal(
+            name="Fund",
+            target_amount=5000.0,
+            monthly_contribution=-100.0,
+            start_date=date(2025, 1, 1),
+        )
+        proj = compute_projection(g)
+        assert proj.months_to_target == 0
+        assert proj.target_date == date(2025, 1, 1)
+
+    def test_single_month(self):
+        g = Goal(
+            name="Quick",
+            target_amount=50.0,
+            monthly_contribution=100.0,
+            start_date=date(2025, 3, 15),
+        )
+        proj = compute_projection(g)
+        assert proj.months_to_target == 1
+        assert proj.target_date == date(2025, 4, 15)

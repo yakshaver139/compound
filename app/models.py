@@ -1,9 +1,11 @@
+import math
 from collections import defaultdict
 from datetime import date
 from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 
+from dateutil.relativedelta import relativedelta
 from pydantic import BaseModel, Field
 
 
@@ -37,6 +39,27 @@ class GoalCreate(BaseModel):
 
 class Goal(GoalCreate):
     id: UUID = Field(default_factory=uuid4)
+
+
+class GoalProjection(BaseModel):
+    months_to_target: int
+    target_date: date
+
+
+class GoalWithProjection(Goal):
+    projection: GoalProjection
+
+
+def compute_projection(goal: Goal) -> GoalProjection:
+    """Compute simple projection for a goal."""
+    if goal.monthly_contribution <= 0:
+        return GoalProjection(
+            months_to_target=0,
+            target_date=goal.start_date,
+        )
+    months = math.ceil(goal.target_amount / goal.monthly_contribution)
+    target_date = goal.start_date + relativedelta(months=months)
+    return GoalProjection(months_to_target=months, target_date=target_date)
 
 
 class Summary(BaseModel):
