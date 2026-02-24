@@ -86,3 +86,6 @@ Cargo.lock
 .beadloom
 # bd worktree
 .worktrees/compound-2v9/
+__pycache__/
+*.pyc
+.pytest_cache/
