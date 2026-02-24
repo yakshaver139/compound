@@ -18,3 +18,9 @@ def home():
 def summary_page():
     html = (TEMPLATES_DIR / "summary.html").read_text()
     return HTMLResponse(content=html)
+
+
+@router.get("/goals-page", response_class=HTMLResponse)
+def goals_page():
+    html = (TEMPLATES_DIR / "goals.html").read_text()
+    return HTMLResponse(content=html)

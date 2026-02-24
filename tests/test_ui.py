@@ -61,3 +61,43 @@ def test_summary_page_contains_category_list():
 def test_summary_page_links_to_transactions():
     resp = client.get("/summary-page")
     assert 'href="/"' in resp.text
+
+
+def test_goals_page_returns_html():
+    resp = client.get("/goals-page")
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers["content-type"]
+
+
+def test_goals_page_contains_form():
+    resp = client.get("/goals-page")
+    html = resp.text
+    assert "Create Goal" in html
+    assert '<form id="goal-form"' in html
+
+
+def test_goals_page_contains_goal_list():
+    resp = client.get("/goals-page")
+    html = resp.text
+    assert "Your Goals" in html
+    assert 'id="goal-list"' in html
+
+
+def test_goals_page_links_to_transactions():
+    resp = client.get("/goals-page")
+    assert 'href="/"' in resp.text
+
+
+def test_goals_page_links_to_summary():
+    resp = client.get("/goals-page")
+    assert '/summary-page' in resp.text
+
+
+def test_home_links_to_goals():
+    resp = client.get("/")
+    assert '/goals-page' in resp.text
+
+
+def test_summary_page_links_to_goals():
+    resp = client.get("/summary-page")
+    assert '/goals-page' in resp.text
