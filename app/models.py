@@ -19,7 +19,7 @@ class TransactionCreate(BaseModel):
     date: date
     amount: float
     merchant: str
-    category: Category
+    category: Category = Category.other
     notes: Optional[str] = None
 
 
