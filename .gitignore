@@ -1,0 +1,88 @@
+# === OS ===
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# === Editors / IDEs ===
+**/.vscode/
+**/.idea/
+*.swp
+*.swo
+*~
+**/.claude/
+
+# === Python ===
+**/__pycache__/
+*.py[cod]
+**/*.egg-info/
+**/dist/
+**/build/
+*.egg
+**/.venv/
+**/venv/
+**/env/
+**/.env
+.python-version
+
+# === Node / JavaScript / TypeScript ===
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+**/.next/
+**/.nuxt/
+**/.cache/
+
+# === Go ===
+/vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# === Rust ===
+**/target/
+Cargo.lock
+
+# === Java / Kotlin ===
+*.class
+*.jar
+*.war
+*.ear
+**/.gradle/
+
+# === Ruby ===
+**/.bundle/
+**/vendor/bundle/
+*.gem
+
+# === C / C++ ===
+*.o
+*.obj
+*.a
+*.lib
+
+# === Docker ===
+**/.docker/
+
+# === Terraform ===
+**/.terraform/
+*.tfstate
+*.tfstate.*
+
+# === Logs & temp ===
+*.log
+**/tmp/
+**/temp/
+
+# === Beadloom ===
+**/.beadloom/
+**/beadloom.log
+**/.worktrees/
+.beadloom
+# bd worktree
+.worktrees/compound-2v9/
