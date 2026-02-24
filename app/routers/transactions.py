@@ -9,6 +9,9 @@ from app.storage import load_data
 from app.models import Transaction, TransactionCreate
 from app.storage import append_transaction
 
+from app.models import Transaction, TransactionCreate
+from app.storage import append_transaction
+
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 @router.get("", response_model=list[Transaction])
